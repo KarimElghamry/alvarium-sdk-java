@@ -4,25 +4,20 @@ pipeline {
         maven 'M3'
     }
     stages {
-        stage ('test') {
-            steps {
-                sh 'mvn test'
-            }
-            post {
-                success {
-                    junit 'target/surefire-reports/**/*.xml'
-                }
-            }
-        }
         stage ('build') {
             steps {
-                sh 'mvn package'
+                step([$class: 'AlvariumBuilder', annotationType: 'TPM'])
+                maven('test')
+                step([$class: 'AlvariumBuilder', annotationType: 'GIT'])
+                maven('package')
             }
-            post {
-                success {
-                    archiveArtifacts artifacts: 'target/**/*.jar', fingerprint: true
-                }
-            }
+        }
+    }
+
+    post {
+        success {
+            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            step([$class: 'AlvariumRecoder', annotationType: 'ARTIFACT'])
         }
     }
 }
